@@ -317,6 +317,12 @@ double DockRxOpt::currentSquelchLevel() const
     return ui->sqlSpinBox->value();
 }
 
+void DockRxOpt::setBeaconTrackingFreq(float freq)
+{
+    QString f = QString::number(freq/1e3);
+    ui->trackedFreq->setText(f + " kHz");
+}
+
 
 /** Get filter lo/hi for a given mode and preset */
 void DockRxOpt::getFilterPreset(int mode, int preset, int * lo, int * hi) const
@@ -768,4 +774,29 @@ bool DockRxOpt::IsModulationValid(QString strModulation)
 QString DockRxOpt::GetStringForModulationIndex(int iModulationIndex)
 {
     return ModulationStrings[iModulationIndex];
+}
+
+void DockRxOpt::on_trackBeaconBox_stateChanged(int checkstate)
+{
+    emit beaconTrackingChanged(checkstate != 0);
+}
+
+void DockRxOpt::on_expectedFreqBox_valueChanged(double freq)
+{
+    emit expectedBeaconFreqChanged(freq);
+}
+
+void DockRxOpt::on_loopBWBox_valueChanged(double loop_bw)
+{
+    emit beaconTrackingLoopBWChanged(loop_bw);
+}
+
+void DockRxOpt::on_trackingBWBox_valueChanged(double bw)
+{
+    emit beaconTrackingBWChanged(bw);
+}
+
+void DockRxOpt::on_applyTrackingSettingsBtn_clicked()
+{
+    emit applyTrackingSettingsClicked();
 }

@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>228</width>
+    <width>252</width>
     <height>110</height>
    </rect>
   </property>
@@ -27,7 +27,7 @@
       </size>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>3</number>
      </property>
      <widget class="QWidget" name="demodNoOpt">
       <layout class="QHBoxLayout" name="horizontalLayout">
@@ -232,8 +232,8 @@ For digital modes it is best to switch it off.</string>
         <rect>
          <x>20</x>
          <y>30</y>
-         <width>161</width>
-         <height>29</height>
+         <width>179</width>
+         <height>39</height>
         </rect>
        </property>
        <layout class="QHBoxLayout" name="horizontalLayout_2">

@@ -29,8 +29,10 @@
 #include <iostream>
 
 #include <gnuradio/blocks/multiply_const_ff.h>
+#include <gnuradio/filter/firdes.h>
 #include <gnuradio/prefs.h>
 #include <gnuradio/top_block.h>
+#include <gnuradio/flowgraph.h>
 #include <osmosdr/source.h>
 #include <osmosdr/ranges.h>
 
@@ -73,6 +75,11 @@ receiver::receiver(const std::string input_device,
       d_iq_rev(false),
       d_dc_cancel(false),
       d_iq_balance(false),
+      d_track_beacon(false),
+      d_expected_beacon_freq(100e3),
+      d_loop_bw(0.01),
+      d_beacontrack_bw(20e3),
+      d_tracker_decim(10),
       d_demod(RX_DEMOD_OFF)
 {
 
@@ -150,6 +157,45 @@ receiver::receiver(const std::string input_device,
     audio_null_sink1 = gr::blocks::null_sink::make(sizeof(float));
     sniffer = make_sniffer_f();
     /* sniffer_rr is created at each activation. */
+
+    const auto taps = gr::filter::firdes::complex_band_pass(
+            /*gain*/ 1.0,
+            /*sampling freq*/ d_quad_rate,
+            /*low cutoff*/ -d_quad_rate/(2.0*d_tracker_decim),
+            /*high cutoff*/ d_quad_rate/(2.0*d_tracker_decim),
+            /*transition width*/ d_beacontrack_bw);
+
+    beacon_channeliser = gr::filter::freq_xlating_fir_filter_ccc::make(d_tracker_decim,
+            taps, d_expected_beacon_freq, d_quad_rate);
+
+
+    beacon_agc = gr::analog::agc2_cc::make(/*attack*/1e-2, /*decay*/0.2, /*ref*/1.0, /*gain*/10);
+    beacon_agc->set_max_gain(65536);
+
+    beacon_costas_output_sink = gr::blocks::null_sink::make(sizeof(complex<float>));
+    beacon_freq_probe = gr::blocks::probe_signal_f::make();
+
+    // The following was taken from GNURadio's rational_resampler.py, which contains default
+    // behaviour in case taps are not given to the rational resampler.
+    const double halfband = 0.5;
+    const double fractional_bw = 0.4;
+    const double trans_width = halfband - fractional_bw;
+    const double mid_transition_band = halfband - trans_width / 2.0;
+
+    beacon_freq_resampler = gr::filter::rational_resampler_base_fff::make(
+                /*interpolation*/d_tracker_decim,
+                /*decimation*/1,
+                gr::filter::firdes::low_pass(d_tracker_decim,
+                                  d_tracker_decim,
+                                  mid_transition_band,
+                                  trans_width,
+                                  gr::filter::firdes::WIN_KAISER,
+                                  /*beta*/7.0));
+
+    beacon_vco = gr::blocks::vco_c::make(d_quad_rate,
+            /*sensitivity*/-1.0*(d_quad_rate/d_tracker_decim), /*amplitude*/1.0);
+
+    beacon_mixer = gr::blocks::multiply_cc::make(/*vector len*/1);
 
     set_demod(RX_DEMOD_NFM);
 
@@ -1265,27 +1311,71 @@ void receiver::get_sniffer_data(float * outbuff, unsigned int &num)
 /** Convenience function to connect all blocks. */
 void receiver::connect_all(rx_chain type)
 {
-    switch (type)
+    if (d_decim >= 2)
     {
-    case RX_CHAIN_NONE:
-        if (d_decim >= 2)
+        tb->connect(src, 0, input_decim, 0);
+        tb->connect(input_decim, 0, iq_swap, 0);
+    }
+    else
+    {
+        tb->connect(src, 0, iq_swap, 0);
+    }
+
+    if (d_track_beacon)
+    {
+        beacon_channeliser->set_center_freq(d_expected_beacon_freq);
+        const auto taps = gr::filter::firdes::complex_band_pass(
+                /*gain*/ 1.0,
+                /*sampling freq*/ d_quad_rate,
+                /*low cutoff*/ -d_quad_rate/(2.0*d_tracker_decim),
+                /*high cutoff*/ d_quad_rate/(2.0*d_tracker_decim),
+                /*transition width*/ d_beacontrack_bw);
+        beacon_channeliser->set_taps(taps);
+
+        // costas_loop_cc doesn't support changing the loop bw, so we
+        // create it here
+        beacon_costas = gr::digital::costas_loop_cc::make(d_loop_bw, /*order*/2, /*use_snr*/false);
+
+        tb->connect(beacon_channeliser, 0, beacon_agc, 0);
+        tb->connect(beacon_agc, 0, beacon_costas, 0);
+        tb->connect(beacon_costas, 0, beacon_costas_output_sink, 0);
+        tb->connect(beacon_costas, 1, beacon_freq_resampler, 0); // 1 is the freq output
+        tb->connect(beacon_costas, 1, beacon_freq_probe, 0);
+        tb->connect(beacon_freq_resampler, 0, beacon_vco, 0);
+        tb->connect(beacon_vco, 0, beacon_mixer, 1);
+    }
+
+    if (d_dc_cancel)
+    {
+        if (d_track_beacon)
         {
-            tb->connect(src, 0, input_decim, 0);
-            tb->connect(input_decim, 0, iq_swap, 0);
+            tb->connect(iq_swap, 0, dc_corr, 0);
+            tb->connect(dc_corr, 0, beacon_channeliser, 0);
+            tb->connect(dc_corr, 0, beacon_mixer, 0);
+            tb->connect(beacon_mixer, 0, iq_fft, 0);
         }
         else
         {
-            tb->connect(src, 0, iq_swap, 0);
-        }
-        if (d_dc_cancel)
-        {
             tb->connect(iq_swap, 0, dc_corr, 0);
             tb->connect(dc_corr, 0, iq_fft, 0);
+        }
+    }
+    else
+    {
+        if (d_track_beacon) {
+            tb->connect(iq_swap, 0, beacon_channeliser, 0);
+            tb->connect(iq_swap, 0, beacon_mixer, 0);
+            tb->connect(beacon_mixer, 0, iq_fft, 0);
         }
         else
         {
             tb->connect(iq_swap, 0, iq_fft, 0);
         }
+    }
+
+    switch (type)
+    {
+    case RX_CHAIN_NONE:
         break;
 
     case RX_CHAIN_NBRX:
@@ -1294,24 +1384,16 @@ void receiver::connect_all(rx_chain type)
             rx.reset();
             rx = make_nbrx(d_quad_rate, d_audio_rate);
         }
-        if (d_decim >= 2)
+        if (d_track_beacon)
         {
-            tb->connect(src, 0, input_decim, 0);
-            tb->connect(input_decim, 0, iq_swap, 0);
+            tb->connect(beacon_mixer, 0, mixer, 0);
         }
-        else
+        else if (d_dc_cancel)
         {
-            tb->connect(src, 0, iq_swap, 0);
-        }
-        if (d_dc_cancel)
-        {
-            tb->connect(iq_swap, 0, dc_corr, 0);
-            tb->connect(dc_corr, 0, iq_fft, 0);
             tb->connect(dc_corr, 0, mixer, 0);
         }
         else
         {
-            tb->connect(iq_swap, 0, iq_fft, 0);
             tb->connect(iq_swap, 0, mixer, 0);
         }
         tb->connect(lo, 0, mixer, 1);
@@ -1330,24 +1412,17 @@ void receiver::connect_all(rx_chain type)
             rx.reset();
             rx = make_wfmrx(d_quad_rate, d_audio_rate);
         }
-        if (d_decim >= 2)
+
+        if (d_track_beacon)
         {
-            tb->connect(src, 0, input_decim, 0);
-            tb->connect(input_decim, 0, iq_swap, 0);
+            tb->connect(beacon_mixer, 0, mixer, 0);
         }
-        else
+        else if (d_dc_cancel)
         {
-            tb->connect(src, 0, iq_swap, 0);
-        }
-        if (d_dc_cancel)
-        {
-            tb->connect(iq_swap, 0, dc_corr, 0);
-            tb->connect(dc_corr, 0, iq_fft, 0);
             tb->connect(dc_corr, 0, mixer, 0);
         }
         else
         {
-            tb->connect(iq_swap, 0, iq_fft, 0);
             tb->connect(iq_swap, 0, mixer, 0);
         }
         tb->connect(lo, 0, mixer, 1);
@@ -1413,4 +1488,60 @@ bool receiver::is_rds_decoder_active(void) const
 void receiver::reset_rds_parser(void)
 {
     rx->reset_rds_parser();
+}
+
+void receiver::set_beacon_tracking(bool enabled)
+{
+    std::clog << "Beacon tracking: " << enabled << std::endl;
+    if (enabled == d_track_beacon)
+        return;
+
+    d_track_beacon = enabled;
+
+    // Reconf is required to avoid the running the tracking processing when
+    // the user doesn't want tracking.
+    rx_demod demod = d_demod;
+    d_demod = RX_DEMOD_OFF;
+    set_demod(demod);
+}
+
+void receiver::set_beacon_expected_freq(double freq)
+{
+    std::clog << "Beacon tracking expected freq: " << freq << std::endl;
+
+    d_expected_beacon_freq = freq;
+}
+
+void receiver::set_beacon_loop_bw(double loop_bw)
+{
+    std::clog << "Beacon tracking loop bw: " << loop_bw << std::endl;
+    d_loop_bw = loop_bw;
+}
+
+void receiver::set_beacon_tracking_bw(double bw)
+{
+    std::clog << "Beacon tracking bw: " << bw << std::endl;
+    d_beacontrack_bw = bw;
+}
+
+void receiver::apply_tracking_settings()
+{
+    // We use a separate apply button because
+    // Costas doesn't support setting loop bandwidth and
+    // tracking bandwidth requires calculating new taps for
+    // the channeliser.
+
+    rx_demod demod = d_demod;
+    d_demod = RX_DEMOD_OFF;
+    set_demod(demod);
+}
+
+float receiver::get_beacon_freq()
+{
+    if (d_track_beacon) {
+        return beacon_freq_probe->level() * -1.0 * d_quad_rate;
+    }
+    else {
+        return 0;
+    }
 }

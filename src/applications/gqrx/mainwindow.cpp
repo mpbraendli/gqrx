@@ -212,6 +212,16 @@ MainWindow::MainWindow(const QString cfgfile, bool edit_conf, QWidget *parent) :
     connect(uiDockRxOpt, SIGNAL(agcGainChanged(int)), this, SLOT(setAgcGain(int)));
     connect(uiDockRxOpt, SIGNAL(agcDecayChanged(int)), this, SLOT(setAgcDecay(int)));
     connect(uiDockRxOpt, SIGNAL(noiseBlankerChanged(int,bool,float)), this, SLOT(setNoiseBlanker(int,bool,float)));
+    connect(uiDockRxOpt, SIGNAL(rxFreqChanged(qint64)), ui->freqCtrl, SLOT(setFrequency(qint64)));
+    connect(uiDockRxOpt, SIGNAL(beaconTrackingChanged(bool)), this, SLOT(setBeaconTracking(bool)));
+    connect(uiDockRxOpt, SIGNAL(expectedBeaconFreqChanged(double)),
+            this, SLOT(setBeaconExpectedFreq(double)));
+    connect(uiDockRxOpt, SIGNAL(beaconTrackingLoopBWChanged(double)),
+            this, SLOT(setBeaconLoopBW(double)));
+    connect(uiDockRxOpt, SIGNAL(beaconTrackingBWChanged(double)),
+            this, SLOT(setBeaconTrackingBW(double)));
+    connect(uiDockRxOpt, SIGNAL(applyTrackingSettingsClicked()), this, SLOT(applyTrackingSettings()));
+
     connect(uiDockRxOpt, SIGNAL(sqlLevelChanged(double)), this, SLOT(setSqlLevel(double)));
     connect(uiDockRxOpt, SIGNAL(sqlAutoClicked()), this, SLOT(setSqlLevelAuto()));
     connect(uiDockAudio, SIGNAL(audioGainChanged(float)), this, SLOT(setAudioGain(float)));
@@ -281,6 +291,9 @@ MainWindow::MainWindow(const QString cfgfile, bool edit_conf, QWidget *parent) :
     rds_timer = new QTimer(this);
     connect(rds_timer, SIGNAL(timeout()), this, SLOT(rdsTimeout()));
 
+    beacon_tracking_timer = new QTimer(this);
+    connect(beacon_tracking_timer, SIGNAL(timeout()), this, SLOT(beaconTrackingTimeout()));
+
     // enable frequency tooltips on FFT plot
 #ifdef Q_OS_MAC
     ui->plotter->setTooltipsEnabled(false);
@@ -341,6 +354,9 @@ MainWindow::~MainWindow()
 
     audio_fft_timer->stop();
     delete audio_fft_timer;
+
+    beacon_tracking_timer->stop();
+    delete beacon_tracking_timer;
 
     if (m_settings)
     {
@@ -1348,6 +1364,12 @@ void MainWindow::rdsTimeout()
     }
 }
 
+void MainWindow::beaconTrackingTimeout()
+{
+    const float freq = rx->get_beacon_freq();
+    uiDockRxOpt->setBeaconTrackingFreq(freq);
+}
+
 /**
  * @brief Start audio recorder.
  * @param filename The file name into which audio should be recorded.
@@ -1720,6 +1742,7 @@ void MainWindow::on_actionDSP_triggered(bool checked)
         }
 
         audio_fft_timer->start(40);
+        beacon_tracking_timer->start(100);
 
         /* update menu text and button tooltip */
         ui->actionDSP->setToolTip(tr("Stop DSP processing"));
@@ -1735,6 +1758,7 @@ void MainWindow::on_actionDSP_triggered(bool checked)
         iq_fft_timer->stop();
         audio_fft_timer->stop();
         rds_timer->stop();
+        beacon_tracking_timer->stop();
 
         /* stop receiver */
         rx->stop();
@@ -2111,6 +2135,32 @@ void MainWindow::setPassband(int bandwidth)
 
     on_plotter_newFilterFreq(lo, hi);
 }
+
+void MainWindow::setBeaconTracking(bool enable)
+{
+    rx->set_beacon_tracking(enable);
+}
+
+void MainWindow::setBeaconExpectedFreq(double freq)
+{
+    rx->set_beacon_expected_freq(freq);
+}
+
+void MainWindow::setBeaconLoopBW(double loop_bw)
+{
+    rx->set_beacon_loop_bw(loop_bw);
+}
+
+void MainWindow::setBeaconTrackingBW(double bw)
+{
+    rx->set_beacon_tracking_bw(bw);
+}
+
+void MainWindow::applyTrackingSettings()
+{
+    rx->apply_tracking_settings();
+}
+
 
 /** Launch Gqrx google group website. */
 void MainWindow::on_actionUserGroup_triggered()

@@ -24,12 +24,19 @@
 #define RECEIVER_H
 
 #include <gnuradio/analog/sig_source_c.h>
+#include <gnuradio/analog/agc2_cc.h>
 #include <gnuradio/blocks/file_sink.h>
+#include <gnuradio/blocks/multiply_const_ff.h>
 #include <gnuradio/blocks/multiply_const_ff.h>
 #include <gnuradio/blocks/multiply_cc.h>
 #include <gnuradio/blocks/null_sink.h>
+#include <gnuradio/blocks/probe_signal_f.h>
+#include <gnuradio/blocks/vco_c.h>
 #include <gnuradio/blocks/wavfile_sink.h>
 #include <gnuradio/blocks/wavfile_source.h>
+#include <gnuradio/digital/costas_loop_cc.h>
+#include <gnuradio/filter/freq_xlating_fir_filter_ccc.h>
+#include <gnuradio/filter/rational_resampler_base_fff.h>
 #include <gnuradio/top_block.h>
 #include <osmosdr/source.h>
 #include <string>
@@ -220,6 +227,14 @@ public:
     bool        is_rds_decoder_active(void) const;
     void        reset_rds_parser(void);
 
+    /* Beacon trackin functions */
+    void        set_beacon_tracking(bool enable);
+    void        set_beacon_expected_freq(double freq);
+    void        set_beacon_loop_bw(double loop_bw);
+    void        set_beacon_tracking_bw(double bw);
+    void        apply_tracking_settings();
+    float       get_beacon_freq();
+
 private:
     void        connect_all(rx_chain type);
 
@@ -238,6 +253,11 @@ private:
     bool        d_iq_rev;           /*!< Whether I/Q is reversed or not. */
     bool        d_dc_cancel;        /*!< Enable automatic DC removal. */
     bool        d_iq_balance;       /*!< Enable automatic IQ balance. */
+    bool        d_track_beacon;     /*!< Enable PSK beacon frequency tracking. */
+    double      d_expected_beacon_freq; /*!< Where to search for the beacon */
+    double      d_loop_bw;          /*!< Loop bandwidth used for the costas loop, in rad/sample */
+    double      d_beacontrack_bw;   /*!< Bandwidth for the tracking input filter */
+    unsigned int d_tracker_decim;   /*!< Decimation used for the PSK beacon tracker */
 
     std::string input_devstr;  /*!< Current input device string. */
     std::string output_devstr; /*!< Current output device string. */
@@ -280,6 +300,16 @@ private:
 #else
     gr::audio::sink::sptr     audio_snk;  /*!< gr audio sink */
 #endif
+
+    /* Blocks used for the beacon tracker */
+    gr::filter::freq_xlating_fir_filter_ccc::sptr beacon_channeliser;
+    gr::analog::agc2_cc::sptr beacon_agc;
+    gr::digital::costas_loop_cc::sptr beacon_costas;
+    gr::blocks::null_sink::sptr beacon_costas_output_sink;
+    gr::blocks::probe_signal_f::sptr beacon_freq_probe;
+    gr::filter::rational_resampler_base_fff::sptr beacon_freq_resampler;
+    gr::blocks::vco_c::sptr beacon_vco;
+    gr::blocks::multiply_cc::sptr beacon_mixer;
 
     //! Get a path to a file containing random bytes
     static std::string get_random_file(void);

@@ -111,6 +111,7 @@ private:
     QTimer   *iq_fft_timer;
     QTimer   *audio_fft_timer;
     QTimer   *rds_timer;
+    QTimer   *beacon_tracking_timer;
 
     receiver *rx;
 
@@ -160,6 +161,11 @@ private slots:
     double setSqlLevelAuto();
     void setAudioGain(float gain);
     void setPassband(int bandwidth);
+    void setBeaconTracking(bool enable);
+    void setBeaconExpectedFreq(double freq);
+    void setBeaconLoopBW(double loop_bw);
+    void setBeaconTrackingBW(double bw);
+    void applyTrackingSettings();
 
     /* audio recording and playback */
     void startAudioRec(const QString filename);
@@ -230,6 +236,7 @@ private slots:
     void iqFftTimeout();
     void audioFftTimeout();
     void rdsTimeout();
+    void beaconTrackingTimeout();
 };
 
 #endif // MAINWINDOW_H

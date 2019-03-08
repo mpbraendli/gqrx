@@ -180,9 +180,9 @@ signals:
 
     /** Signals emitted for changes to beacon tracking settings. */
     void beaconTrackingChanged(bool enable);
-    void expectedBeaconFreqChanged(double freq);
+    void expectedBeaconFreqChanged(double freq_kHz);
     void beaconTrackingLoopBWChanged(double loop_bw);
-    void beaconTrackingBWChanged(double bw);
+    void beaconTrackingBWChanged(double bw_kHz);
     void applyTrackingSettingsClicked();
 
     void cwOffsetChanged(int offset);

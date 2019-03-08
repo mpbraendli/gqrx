@@ -1492,7 +1492,6 @@ void receiver::reset_rds_parser(void)
 
 void receiver::set_beacon_tracking(bool enabled)
 {
-    std::clog << "Beacon tracking: " << enabled << std::endl;
     if (enabled == d_track_beacon)
         return;
 
@@ -1507,20 +1506,16 @@ void receiver::set_beacon_tracking(bool enabled)
 
 void receiver::set_beacon_expected_freq(double freq)
 {
-    std::clog << "Beacon tracking expected freq: " << freq << std::endl;
-
     d_expected_beacon_freq = freq;
 }
 
 void receiver::set_beacon_loop_bw(double loop_bw)
 {
-    std::clog << "Beacon tracking loop bw: " << loop_bw << std::endl;
     d_loop_bw = loop_bw;
 }
 
 void receiver::set_beacon_tracking_bw(double bw)
 {
-    std::clog << "Beacon tracking bw: " << bw << std::endl;
     d_beacontrack_bw = bw;
 }
 

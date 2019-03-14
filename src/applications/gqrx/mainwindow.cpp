@@ -847,6 +847,7 @@ void MainWindow::setLnbLo(double freq_mhz)
     updateFrequencyRange();
     ui->freqCtrl->setFrequency(d_lnb_lo + rf_freq);
     ui->plotter->setCenterFreq(d_lnb_lo + d_hw_freq);
+    rx->set_lnb_lo_freq(freq_mhz*1e6);
 
     // update LNB LO in settings
     if (freq_mhz == 0.f)

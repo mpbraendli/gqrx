@@ -151,6 +151,8 @@ public:
     double      get_rf_freq(void);
     status      get_rf_range(double *start, double *stop, double *step);
 
+    void        set_lnb_lo_freq(double freq_hz);
+
     std::vector<std::string>    get_gain_names();
     status      get_gain_range(std::string &name, double *start, double *stop,
                                double *step) const;
@@ -244,7 +246,7 @@ private:
     double      d_quad_rate;        /*!< Quadrature rate (input_rate / decim) */
     double      d_audio_rate;       /*!< Audio output rate. */
     unsigned int    d_decim;        /*!< input decimation. */
-    double      d_rf_freq;          /*!< Current RF frequency. */
+    double      d_rf_freq;          /*!< Current RF frequency, without LO offset. */
     double      d_filter_offset;    /*!< Current filter offset */
     double      d_cw_offset;        /*!< CW offset */
     bool        d_recording_iq;     /*!< Whether we are recording I/Q file. */
@@ -254,7 +256,8 @@ private:
     bool        d_dc_cancel;        /*!< Enable automatic DC removal. */
     bool        d_iq_balance;       /*!< Enable automatic IQ balance. */
     bool        d_track_beacon;     /*!< Enable PSK beacon frequency tracking. */
-    double      d_expected_beacon_freq; /*!< Where to search for the beacon */
+    double      d_lnb_lo_freq;      /*!< LNB LO offset used for expected beacon freq. */
+    double      d_expected_beacon_freq; /*!< Where to search for the beacon, with LO offset */
     double      d_loop_bw;          /*!< Loop bandwidth used for the costas loop, in rad/sample */
     double      d_beacontrack_bw;   /*!< Bandwidth for the tracking input filter */
     unsigned int d_tracker_decim;   /*!< Decimation used for the PSK beacon tracker */

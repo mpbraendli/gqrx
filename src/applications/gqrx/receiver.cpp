@@ -76,7 +76,8 @@ receiver::receiver(const std::string input_device,
       d_dc_cancel(false),
       d_iq_balance(false),
       d_track_beacon(false),
-      d_expected_beacon_freq(100e3),
+      d_lnb_lo_freq(9750e6),
+      d_expected_beacon_freq(10489.8e6),
       d_loop_bw(0.01),
       d_beacontrack_bw(20e3),
       d_tracker_decim(10),
@@ -165,9 +166,9 @@ receiver::receiver(const std::string input_device,
             /*high cutoff*/ d_quad_rate/(2.0*d_tracker_decim),
             /*transition width*/ d_beacontrack_bw);
 
+    const double beacon_channel_offset = d_expected_beacon_freq - d_lnb_lo_freq - d_rf_freq;
     beacon_channeliser = gr::filter::freq_xlating_fir_filter_ccc::make(d_tracker_decim,
-            taps, d_expected_beacon_freq, d_quad_rate);
-
+            taps, beacon_channel_offset, d_quad_rate);
 
     beacon_agc = gr::analog::agc2_cc::make(/*attack*/1e-2, /*decay*/0.2, /*ref*/1.0, /*gain*/10);
     beacon_agc->set_max_gain(65536);
@@ -569,6 +570,12 @@ receiver::status receiver::set_rf_freq(double freq_hz)
 {
     d_rf_freq = freq_hz;
 
+    if (d_track_beacon)
+    {
+        const double beacon_channel_offset = d_expected_beacon_freq - d_lnb_lo_freq - d_rf_freq;
+        beacon_channeliser->set_center_freq(beacon_channel_offset);
+    }
+
     src->set_center_freq(d_rf_freq);
     // FIXME: read back frequency?
 
@@ -614,6 +621,16 @@ receiver::status receiver::get_rf_range(double *start, double *stop, double *ste
     }
 
     return STATUS_ERROR;
+}
+
+/**
+ * @brief Set LNB LO freq.
+ * @param freq_hz Frequency of the LNB LO.
+ */
+void receiver::set_lnb_lo_freq(double freq_hz)
+{
+    /* Is only needed so that expected beacon freq can be converted to RF freq. */
+    d_lnb_lo_freq = freq_hz;
 }
 
 /** Get the names of available gain stages. */
@@ -1323,7 +1340,8 @@ void receiver::connect_all(rx_chain type)
 
     if (d_track_beacon)
     {
-        beacon_channeliser->set_center_freq(d_expected_beacon_freq);
+        const double beacon_channel_offset = d_expected_beacon_freq - d_lnb_lo_freq - d_rf_freq;
+        beacon_channeliser->set_center_freq(beacon_channel_offset);
         const auto taps = gr::filter::firdes::complex_band_pass(
                 /*gain*/ 1.0,
                 /*sampling freq*/ d_quad_rate,

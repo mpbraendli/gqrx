@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>349</width>
+    <width>328</width>
     <height>688</height>
    </rect>
   </property>
@@ -18,7 +18,7 @@
   </property>
   <property name="minimumSize">
    <size>
-    <width>349</width>
+    <width>309</width>
     <height>688</height>
    </size>
   </property>
@@ -227,7 +227,7 @@ This is an offset from the hardware RF frequency.&lt;/p&gt;&lt;/body&gt;&lt;/htm
         </property>
         <property name="minimumSize">
          <size>
-          <width>50</width>
+          <width>30</width>
           <height>30</height>
          </size>
         </property>
@@ -264,7 +264,7 @@ This is an offset from the hardware RF frequency.&lt;/p&gt;&lt;/body&gt;&lt;/htm
         </property>
         <property name="minimumSize">
          <size>
-          <width>50</width>
+          <width>30</width>
           <height>30</height>
          </size>
         </property>
@@ -479,7 +479,7 @@ This is an offset from the hardware RF frequency.&lt;/p&gt;&lt;/body&gt;&lt;/htm
         </property>
         <property name="minimumSize">
          <size>
-          <width>50</width>
+          <width>30</width>
           <height>30</height>
          </size>
         </property>
@@ -519,7 +519,7 @@ This is an offset from the hardware RF frequency.&lt;/p&gt;&lt;/body&gt;&lt;/htm
         </property>
         <property name="minimumSize">
          <size>
-          <width>50</width>
+          <width>30</width>
           <height>30</height>
          </size>
         </property>
@@ -561,7 +561,7 @@ This is an offset from the hardware RF frequency.&lt;/p&gt;&lt;/body&gt;&lt;/htm
           </property>
           <property name="minimumSize">
            <size>
-            <width>50</width>
+            <width>30</width>
             <height>30</height>
            </size>
           </property>
@@ -601,7 +601,7 @@ This is an offset from the hardware RF frequency.&lt;/p&gt;&lt;/body&gt;&lt;/htm
           </property>
           <property name="minimumSize">
            <size>
-            <width>50</width>
+            <width>30</width>
             <height>30</height>
            </size>
           </property>
@@ -707,7 +707,7 @@ This is an offset from the hardware RF frequency.&lt;/p&gt;&lt;/body&gt;&lt;/htm
           </property>
           <property name="minimumSize">
            <size>
-            <width>50</width>
+            <width>30</width>
             <height>30</height>
            </size>
           </property>
@@ -758,66 +758,17 @@ This is an offset from the hardware RF frequency.&lt;/p&gt;&lt;/body&gt;&lt;/htm
         <property name="topMargin">
          <number>10</number>
         </property>
-        <item row="0" column="2">
-         <widget class="QLabel" name="expectedFreqLabelUnits">
-          <property name="text">
-           <string>kHz</string>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="2">
-         <widget class="QLabel" name="trackingBWUnits">
-          <property name="text">
-           <string>kHz</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="0">
-         <widget class="QLabel" name="expectedFreqLabel">
-          <property name="text">
-           <string>Expected freq</string>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="0">
-         <widget class="QLabel" name="trackingBWLabel">
-          <property name="text">
-           <string>Tracking B/W</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="1">
-         <widget class="QDoubleSpinBox" name="expectedFreqBox">
-          <property name="decimals">
-           <number>3</number>
-          </property>
-          <property name="minimum">
-           <double>-800.000000000000000</double>
-          </property>
-          <property name="maximum">
-           <double>800.000000000000000</double>
-          </property>
-          <property name="value">
-           <double>120.000000000000000</double>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="0">
-         <widget class="QLabel" name="loopBWLabel">
-          <property name="text">
-           <string>Loop B/W</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="2">
-         <widget class="QLabel" name="loopBWUnits">
-          <property name="text">
-           <string>rad/sample</string>
-          </property>
-         </widget>
-        </item>
         <item row="1" column="1">
          <widget class="QDoubleSpinBox" name="loopBWBox">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="suffix">
+           <string> rad/samp</string>
+          </property>
           <property name="decimals">
            <number>3</number>
           </property>
@@ -832,8 +783,48 @@ This is an offset from the hardware RF frequency.&lt;/p&gt;&lt;/body&gt;&lt;/htm
           </property>
          </widget>
         </item>
+        <item row="0" column="1">
+         <widget class="QDoubleSpinBox" name="expectedFreqBox">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Expected frequency of the PSK beacon.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="prefix">
+           <string/>
+          </property>
+          <property name="suffix">
+           <string> MHz</string>
+          </property>
+          <property name="decimals">
+           <number>3</number>
+          </property>
+          <property name="minimum">
+           <double>-80000.000000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>80000.000000000000000</double>
+          </property>
+          <property name="value">
+           <double>10489.799999999999272</double>
+          </property>
+         </widget>
+        </item>
         <item row="2" column="1">
          <widget class="QDoubleSpinBox" name="trackingBWBox">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="suffix">
+           <string> kHz</string>
+          </property>
           <property name="minimum">
            <double>1.000000000000000</double>
           </property>
@@ -845,8 +836,44 @@ This is an offset from the hardware RF frequency.&lt;/p&gt;&lt;/body&gt;&lt;/htm
           </property>
          </widget>
         </item>
-        <item row="3" column="2">
+        <item row="0" column="0">
+         <widget class="QLabel" name="expectedFreqLabel">
+          <property name="text">
+           <string>Expected freq</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="loopBWLabel">
+          <property name="text">
+           <string>Loop B/W</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0">
+         <widget class="QLabel" name="trackingBWLabel">
+          <property name="text">
+           <string>Tracking B/W</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="1">
          <widget class="QPushButton" name="applyTrackingSettingsBtn">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
           <property name="text">
            <string>Appy</string>
           </property>

@@ -127,6 +127,7 @@ MainWindow::MainWindow(const QString cfgfile, bool edit_conf, QWidget *parent) :
     uiDockAudio = new DockAudio();
     uiDockInputCtl = new DockInputCtl();
     uiDockFft = new DockFft();
+    uiDockBeaconTrack = new DockBeaconTrack(this);
     Bookmarks::Get().setConfigDir(m_cfg_dir);
     uiDockBookmarks = new DockBookmarks(this);
 
@@ -151,6 +152,7 @@ MainWindow::MainWindow(const QString cfgfile, bool edit_conf, QWidget *parent) :
     addDockWidget(Qt::RightDockWidgetArea, uiDockInputCtl);
     addDockWidget(Qt::RightDockWidgetArea, uiDockRxOpt);
     addDockWidget(Qt::RightDockWidgetArea, uiDockFft);
+    addDockWidget(Qt::RightDockWidgetArea, uiDockBeaconTrack);
     tabifyDockWidget(uiDockInputCtl, uiDockRxOpt);
     tabifyDockWidget(uiDockRxOpt, uiDockFft);
     uiDockRxOpt->raise();
@@ -165,6 +167,7 @@ MainWindow::MainWindow(const QString cfgfile, bool edit_conf, QWidget *parent) :
     /* hide docks that we don't want to show initially */
     uiDockBookmarks->hide();
     uiDockRDS->hide();
+    uiDockBeaconTrack->hide();
 
     /* Add dock widget actions to View menu. By doing it this way all signal/slot
        connections will be established automagially.
@@ -175,6 +178,7 @@ MainWindow::MainWindow(const QString cfgfile, bool edit_conf, QWidget *parent) :
     ui->menu_View->addAction(uiDockAudio->toggleViewAction());
     ui->menu_View->addAction(uiDockFft->toggleViewAction());
     ui->menu_View->addAction(uiDockBookmarks->toggleViewAction());
+    ui->menu_View->addAction(uiDockBeaconTrack->toggleViewAction());
     ui->menu_View->addSeparator();
     ui->menu_View->addAction(ui->mainToolBar->toggleViewAction());
     ui->menu_View->addSeparator();
@@ -213,14 +217,14 @@ MainWindow::MainWindow(const QString cfgfile, bool edit_conf, QWidget *parent) :
     connect(uiDockRxOpt, SIGNAL(agcDecayChanged(int)), this, SLOT(setAgcDecay(int)));
     connect(uiDockRxOpt, SIGNAL(noiseBlankerChanged(int,bool,float)), this, SLOT(setNoiseBlanker(int,bool,float)));
     connect(uiDockRxOpt, SIGNAL(rxFreqChanged(qint64)), ui->freqCtrl, SLOT(setFrequency(qint64)));
-    connect(uiDockRxOpt, SIGNAL(beaconTrackingChanged(bool)), this, SLOT(setBeaconTracking(bool)));
-    connect(uiDockRxOpt, SIGNAL(expectedBeaconFreqChanged(double)),
+    connect(uiDockBeaconTrack, SIGNAL(beaconTrackingChanged(bool)), this, SLOT(setBeaconTracking(bool)));
+    connect(uiDockBeaconTrack, SIGNAL(expectedBeaconFreqChanged(double)),
             this, SLOT(setBeaconExpectedFreq(double)));
-    connect(uiDockRxOpt, SIGNAL(beaconTrackingLoopBWChanged(double)),
+    connect(uiDockBeaconTrack, SIGNAL(beaconTrackingLoopBWChanged(double)),
             this, SLOT(setBeaconLoopBW(double)));
-    connect(uiDockRxOpt, SIGNAL(beaconFilterBWChanged(double)),
+    connect(uiDockBeaconTrack, SIGNAL(beaconFilterBWChanged(double)),
             this, SLOT(setBeaconFilterBW(double)));
-    connect(uiDockRxOpt, SIGNAL(applyTrackingSettingsClicked()), this, SLOT(applyTrackingSettings()));
+    connect(uiDockBeaconTrack, SIGNAL(applyTrackingSettingsClicked()), this, SLOT(applyTrackingSettings()));
 
     connect(uiDockRxOpt, SIGNAL(sqlLevelChanged(double)), this, SLOT(setSqlLevel(double)));
     connect(uiDockRxOpt, SIGNAL(sqlAutoClicked()), this, SLOT(setSqlLevelAuto()));
@@ -384,6 +388,7 @@ MainWindow::~MainWindow()
     delete uiDockRxOpt;
     delete uiDockAudio;
     delete uiDockBookmarks;
+    delete uiDockBeaconTrack;
     delete uiDockFft;
     delete uiDockInputCtl;
     delete uiDockRDS;
@@ -588,6 +593,7 @@ bool MainWindow::loadConfig(const QString cfgfile, bool check_crash,
 
     uiDockInputCtl->readSettings(m_settings); // this will also update freq range
     uiDockRxOpt->readSettings(m_settings);
+    uiDockBeaconTrack->readSettings(m_settings);
     uiDockFft->readSettings(m_settings);
     uiDockAudio->readSettings(m_settings);
 
@@ -704,6 +710,7 @@ void MainWindow::storeSession()
 
         uiDockInputCtl->saveSettings(m_settings);
         uiDockRxOpt->saveSettings(m_settings);
+        uiDockBeaconTrack->saveSettings(m_settings);
         uiDockFft->saveSettings(m_settings);
         uiDockAudio->saveSettings(m_settings);
 
@@ -1368,7 +1375,7 @@ void MainWindow::rdsTimeout()
 void MainWindow::beaconTrackingTimeout()
 {
     const float freq = rx->get_beacon_freq();
-    uiDockRxOpt->setBeaconTrackingFreq(freq);
+    uiDockBeaconTrack->setBeaconTrackingFreq(freq);
 }
 
 /**

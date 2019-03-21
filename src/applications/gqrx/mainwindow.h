@@ -37,6 +37,7 @@
 #include "qtgui/dockaudio.h"
 #include "qtgui/dockinputctl.h"
 #include "qtgui/dockfft.h"
+#include "qtgui/dockbeacontrack.h"
 #include "qtgui/dockbookmarks.h"
 #include "qtgui/dockrds.h"
 #include "qtgui/afsk1200win.h"
@@ -96,6 +97,7 @@ private:
     DockAudio      *uiDockAudio;
     DockInputCtl   *uiDockInputCtl;
     DockFft        *uiDockFft;
+    DockBeaconTrack *uiDockBeaconTrack;
     DockBookmarks  *uiDockBookmarks;
     DockRDS        *uiDockRDS;
 

@@ -127,6 +127,7 @@ SOURCES += \
     src/qtgui/ctk/ctkRangeSlider.cpp \
     src/qtgui/demod_options.cpp \
     src/qtgui/dockaudio.cpp \
+    src/qtgui/dockbeacontrack.cpp \
     src/qtgui/dockbookmarks.cpp \
     src/qtgui/dockinputctl.cpp \
     src/qtgui/dockrds.cpp \
@@ -186,6 +187,7 @@ HEADERS += \
     src/qtgui/ctk/ctkRangeSlider.h \
     src/qtgui/demod_options.h \
     src/qtgui/dockaudio.h \
+    src/qtgui/dockbeacontrack.h \
     src/qtgui/dockbookmarks.h \
     src/qtgui/dockfft.h \
     src/qtgui/dockinputctl.h \
@@ -217,7 +219,8 @@ FORMS += \
     src/qtgui/iq_tool.ui \
     src/qtgui/dockrxopt.ui \
     src/qtgui/ioconfig.ui \
-    src/qtgui/nb_options.ui
+    src/qtgui/nb_options.ui \
+    src/qtgui/dockbeacontrack.ui
 
 # Use pulseaudio (ps: could use equals? undocumented)
 equals(AUDIO_BACKEND, "pulseaudio"): {

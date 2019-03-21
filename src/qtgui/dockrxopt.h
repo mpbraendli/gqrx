@@ -118,7 +118,6 @@ public slots:
     void setCurrentDemod(int demod);
     void setFilterOffset(qint64 freq_hz);
     void setSquelchLevel(double level);
-    void setBeaconTrackingFreq(float freq);
 
 private:
     void updateHwFreq();
@@ -178,13 +177,6 @@ signals:
     /** Signal emitted when noise blanker status has changed. */
     void noiseBlankerChanged(int nbid, bool on, float threshold);
 
-    /** Signals emitted for changes to beacon tracking settings. */
-    void beaconTrackingChanged(bool enable);
-    void expectedBeaconFreqChanged(double freq_kHz);
-    void beaconTrackingLoopBWChanged(double loop_bw);
-    void beaconFilterBWChanged(double bw_kHz);
-    void applyTrackingSettingsClicked();
-
     void cwOffsetChanged(int offset);
 
 private slots:
@@ -202,11 +194,6 @@ private slots:
     void on_nb1Button_toggled(bool checked);
     void on_nb2Button_toggled(bool checked);
     void on_nbOptButton_clicked();
-    void on_trackBeaconBox_stateChanged(int checkstate);
-    void on_expectedFreqBox_valueChanged(double freq_MHz);
-    void on_loopBWBox_valueChanged(double bw);
-    void on_filterBWBox_valueChanged(double bw_kHz);
-    void on_applyTrackingSettingsBtn_clicked();
 
     // Signals coming from noise blanker pop-up
     void nbOpt_thresholdChanged(int nbid, double value);

@@ -31,6 +31,21 @@ DockBeaconTrack::DockBeaconTrack(QWidget *parent) :
     ui(new Ui::DockBeaconTrack)
 {
     ui->setupUi(this);
+
+    ui->beaconSpectrum->setFreqUnits(1000);
+    ui->beaconSpectrum->setSampleRate(48000);
+    ui->beaconSpectrum->setSpanFreq(24000);
+    ui->beaconSpectrum->setCenterFreq(0);
+    ui->beaconSpectrum->setPercent2DScreen(100);
+    ui->beaconSpectrum->setFftCenterFreq(0);
+    ui->beaconSpectrum->setDemodCenterFreq(0);
+    ui->beaconSpectrum->setFilterBoxEnabled(false);
+    ui->beaconSpectrum->setCenterLineEnabled(false);
+    ui->beaconSpectrum->setBookmarksEnabled(false);
+    ui->beaconSpectrum->setFftRange(-80., 0.);
+    ui->beaconSpectrum->setVdivDelta(40);
+    ui->beaconSpectrum->setHdivDelta(40);
+    ui->beaconSpectrum->setFreqDigits(1);
 }
 
 DockBeaconTrack::~DockBeaconTrack()
@@ -44,6 +59,16 @@ void DockBeaconTrack::saveSettings(QSettings *settings)
 
 void DockBeaconTrack::readSettings(QSettings *settings)
 {
+}
+
+void DockBeaconTrack::setNewFftData(float *fftData, int size, unsigned int rate)
+{
+    if (rate != d_rate) {
+        d_rate = rate;
+        ui->beaconSpectrum->setSampleRate(d_rate);
+        ui->beaconSpectrum->setSpanFreq(d_rate / 2);
+    }
+    ui->beaconSpectrum->setNewFftData(fftData, size);
 }
 
 void DockBeaconTrack::setBeaconTrackingFreq(float freq)

@@ -173,6 +173,8 @@ public:
                                 unsigned int &fftsize);
     void        get_audio_fft_data(std::complex<float>* fftPoints,
                                    unsigned int &fftsize);
+    void        get_beacontrack_fft_data(std::complex<float>* fftPoints,
+                                   unsigned int &fftsize, unsigned int &rate);
 
     /* Noise blanker */
     status      set_nb_on(int nbid, bool on);
@@ -308,6 +310,7 @@ private:
     gr::filter::freq_xlating_fir_filter_ccc::sptr beacon_channeliser;
     gr::analog::agc2_cc::sptr beacon_agc;
     gr::digital::costas_loop_cc::sptr beacon_costas;
+    rx_fft_c_sptr beacon_fft;     /*!< FFT of costas loop output. */
     gr::blocks::null_sink::sptr beacon_costas_output_sink;
     gr::blocks::probe_signal_f::sptr beacon_freq_probe;
     gr::filter::rational_resampler_base_fff::sptr beacon_freq_resampler;

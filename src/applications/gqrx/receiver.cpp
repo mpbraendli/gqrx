@@ -177,6 +177,7 @@ receiver::receiver(const std::string input_device,
     beacon_agc->set_max_gain(65536);
 
     beacon_costas_output_sink = gr::blocks::null_sink::make(sizeof(std::complex<float>));
+    beacon_fft = make_rx_fft_c(8192u, gr::filter::firdes::WIN_HANN);
     beacon_freq_probe = gr::blocks::probe_signal_f::make();
 
     // The following was taken from GNURadio's rational_resampler.py, which contains default
@@ -808,6 +809,14 @@ void receiver::get_audio_fft_data(std::complex<float>* fftPoints, unsigned int &
     audio_fft->get_fft_data(fftPoints, fftsize);
 }
 
+/** Get latest FFT data from the costas loop output. */
+void receiver::get_beacontrack_fft_data(
+        std::complex<float>* fftPoints, unsigned int &fftsize, unsigned int &rate)
+{
+    rate = d_quad_rate / d_tracker_decim;
+    beacon_fft->get_fft_data(fftPoints, fftsize);
+}
+
 receiver::status receiver::set_nb_on(int nbid, bool on)
 {
     if (rx->has_nb())
@@ -1350,7 +1359,6 @@ void receiver::connect_all(rx_chain type)
             beacon_channel_offset << " = " << d_expected_beacon_freq << " - " <<
             d_lnb_lo_freq << " - " << d_rf_freq << endl;
 
-        beacon_channeliser->set_center_freq(beacon_channel_offset);
         const auto taps = gr::filter::firdes::complex_band_pass(
                 /*gain*/ 1.0,
                 /*sampling freq*/ d_quad_rate,
@@ -1358,12 +1366,14 @@ void receiver::connect_all(rx_chain type)
                 /*high cutoff*/ d_beaconfilter_bw,
                 /*transition width*/ 1e3);
         beacon_channeliser->set_taps(taps);
+        beacon_channeliser->set_center_freq(beacon_channel_offset);
 
         // costas_loop_cc doesn't support changing the loop bw, so we
         // create it here
         beacon_costas = gr::digital::costas_loop_cc::make(d_loop_bw, /*order*/2, /*use_snr*/false);
 
         tb->connect(beacon_channeliser, 0, beacon_agc, 0);
+        tb->connect(beacon_channeliser, 0, beacon_fft, 0);
         tb->connect(beacon_agc, 0, beacon_costas, 0);
         tb->connect(beacon_costas, 0, beacon_costas_output_sink, 0);
         tb->connect(beacon_costas, 1, beacon_freq_resampler, 0); // 1 is the freq output

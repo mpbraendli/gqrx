@@ -51,6 +51,8 @@ public:
     void readSettings(QSettings *settings);
     void saveSettings(QSettings *settings);
 
+    void setNewFftData(float *fftData, int size, unsigned int rate);
+
 public slots:
     void setBeaconTrackingFreq(float freq);
 
@@ -71,6 +73,7 @@ private slots:
 
 private:
     Ui::DockBeaconTrack *ui;        /** The Qt designer UI file. */
+    unsigned int d_rate = 0;
 };
 
 #endif // DOCKRXOPT_H

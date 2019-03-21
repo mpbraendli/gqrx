@@ -114,6 +114,9 @@ MainWindow::MainWindow(const QString cfgfile, bool edit_conf, QWidget *parent) :
     for (int i = 0; i < MAX_FFT_SIZE; i++)
         d_iirFftData[i] = -140.0;  // dBFS
 
+    d_beaconFftData = new float[MAX_FFT_SIZE];
+    d_beaconFftDataRaw = new std::complex<float>[MAX_FFT_SIZE];
+
     /* timer for data decoders */
     dec_timer = new QTimer(this);
     connect(dec_timer, SIGNAL(timeout()), this, SLOT(decoderTimeout()));
@@ -396,6 +399,8 @@ MainWindow::~MainWindow()
     delete remote;
     delete [] d_fftData;
     delete [] d_realFftData;
+    delete [] d_beaconFftData;
+    delete [] d_beaconFftDataRaw;
     delete [] d_iirFftData;
     delete [] d_pwrFftData;
     delete qsvg_dummy;
@@ -1376,6 +1381,40 @@ void MainWindow::beaconTrackingTimeout()
 {
     const float freq = rx->get_beacon_freq();
     uiDockBeaconTrack->setBeaconTrackingFreq(freq);
+
+    unsigned int    fftsize;
+    unsigned int    rate;
+
+    // FIXME: fftsize is a reference
+    rx->get_beacontrack_fft_data(d_beaconFftDataRaw, fftsize, rate);
+
+    if (fftsize != 0)
+    {
+        // NB: without cast to float the multiplication will overflow at 64k
+        // and pwr_scale will be inf
+        const float pwr_scale = 1.0 / ((float)fftsize * (float)fftsize);
+
+        /* Normalize, calculate power and shift the FFT */
+        for (unsigned int i = 0; i < fftsize; i++)
+        {
+            std::complex<float> pt;     /* a single FFT point used in calculations */
+            /* normalize and shift */
+            if (i < fftsize/2)
+            {
+                pt = d_beaconFftDataRaw[fftsize/2+i];
+            }
+            else
+            {
+                pt = d_beaconFftDataRaw[i-fftsize/2];
+            }
+
+            /* calculate power in dBFS */
+            const float pwr = pwr_scale * (pt.imag() * pt.imag() + pt.real() * pt.real());
+            d_beaconFftData[i] = 10.0 * log10f(pwr + 1.0e-20);
+        }
+
+        uiDockBeaconTrack->setNewFftData(d_beaconFftData, fftsize, rate);
+    }
 }
 
 /**

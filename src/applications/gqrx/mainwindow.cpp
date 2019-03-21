@@ -218,8 +218,8 @@ MainWindow::MainWindow(const QString cfgfile, bool edit_conf, QWidget *parent) :
             this, SLOT(setBeaconExpectedFreq(double)));
     connect(uiDockRxOpt, SIGNAL(beaconTrackingLoopBWChanged(double)),
             this, SLOT(setBeaconLoopBW(double)));
-    connect(uiDockRxOpt, SIGNAL(beaconTrackingBWChanged(double)),
-            this, SLOT(setBeaconTrackingBW(double)));
+    connect(uiDockRxOpt, SIGNAL(beaconFilterBWChanged(double)),
+            this, SLOT(setBeaconFilterBW(double)));
     connect(uiDockRxOpt, SIGNAL(applyTrackingSettingsClicked()), this, SLOT(applyTrackingSettings()));
 
     connect(uiDockRxOpt, SIGNAL(sqlLevelChanged(double)), this, SLOT(setSqlLevel(double)));
@@ -2152,9 +2152,9 @@ void MainWindow::setBeaconLoopBW(double loop_bw)
     rx->set_beacon_loop_bw(loop_bw);
 }
 
-void MainWindow::setBeaconTrackingBW(double bw)
+void MainWindow::setBeaconFilterBW(double bw)
 {
-    rx->set_beacon_tracking_bw(bw);
+    rx->set_beacon_filter_bw(bw);
 }
 
 void MainWindow::applyTrackingSettings()

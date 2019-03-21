@@ -164,7 +164,7 @@ private slots:
     void setBeaconTracking(bool enable);
     void setBeaconExpectedFreq(double freq);
     void setBeaconLoopBW(double loop_bw);
-    void setBeaconTrackingBW(double bw);
+    void setBeaconFilterBW(double bw);
     void applyTrackingSettings();
 
     /* audio recording and playback */

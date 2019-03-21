@@ -781,9 +781,9 @@ void DockRxOpt::on_trackBeaconBox_stateChanged(int checkstate)
     emit beaconTrackingChanged(checkstate != 0);
 }
 
-void DockRxOpt::on_expectedFreqBox_valueChanged(double freq_kHz)
+void DockRxOpt::on_expectedFreqBox_valueChanged(double freq_MHz)
 {
-    emit expectedBeaconFreqChanged(freq_kHz * 1000.0);
+    emit expectedBeaconFreqChanged(freq_MHz * 1e6);
 }
 
 void DockRxOpt::on_loopBWBox_valueChanged(double loop_bw)
@@ -791,9 +791,9 @@ void DockRxOpt::on_loopBWBox_valueChanged(double loop_bw)
     emit beaconTrackingLoopBWChanged(loop_bw);
 }
 
-void DockRxOpt::on_trackingBWBox_valueChanged(double bw_kHz)
+void DockRxOpt::on_filterBWBox_valueChanged(double bw_kHz)
 {
-    emit beaconTrackingBWChanged(bw_kHz * 1000.0);
+    emit beaconFilterBWChanged(bw_kHz * 1000.0);
 }
 
 void DockRxOpt::on_applyTrackingSettingsBtn_clicked()

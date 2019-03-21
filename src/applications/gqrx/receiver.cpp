@@ -79,7 +79,7 @@ receiver::receiver(const std::string input_device,
       d_lnb_lo_freq(9750e6),
       d_expected_beacon_freq(10489.8e6),
       d_loop_bw(0.01),
-      d_beacontrack_bw(20e3),
+      d_beaconfilter_bw(20e3),
       d_tracker_decim(10),
       d_demod(RX_DEMOD_OFF)
 {
@@ -162,18 +162,21 @@ receiver::receiver(const std::string input_device,
     const auto taps = gr::filter::firdes::complex_band_pass(
             /*gain*/ 1.0,
             /*sampling freq*/ d_quad_rate,
-            /*low cutoff*/ -d_quad_rate/(2.0*d_tracker_decim),
-            /*high cutoff*/ d_quad_rate/(2.0*d_tracker_decim),
-            /*transition width*/ d_beacontrack_bw);
+            /*low cutoff*/ -d_beaconfilter_bw,
+            /*high cutoff*/ d_beaconfilter_bw,
+            /*transition width*/ 1e3);
 
     const double beacon_channel_offset = d_expected_beacon_freq - d_lnb_lo_freq - d_rf_freq;
-    beacon_channeliser = gr::filter::freq_xlating_fir_filter_ccc::make(d_tracker_decim,
-            taps, beacon_channel_offset, d_quad_rate);
+    beacon_channeliser = gr::filter::freq_xlating_fir_filter_ccc::make(
+            /*decimation*/ d_tracker_decim,
+            taps,
+            /*center freq*/ beacon_channel_offset,
+            /*sampling rate*/ d_quad_rate);
 
     beacon_agc = gr::analog::agc2_cc::make(/*attack*/1e-2, /*decay*/0.2, /*ref*/1.0, /*gain*/10);
     beacon_agc->set_max_gain(65536);
 
-    beacon_costas_output_sink = gr::blocks::null_sink::make(sizeof(complex<float>));
+    beacon_costas_output_sink = gr::blocks::null_sink::make(sizeof(std::complex<float>));
     beacon_freq_probe = gr::blocks::probe_signal_f::make();
 
     // The following was taken from GNURadio's rational_resampler.py, which contains default
@@ -1340,14 +1343,20 @@ void receiver::connect_all(rx_chain type)
 
     if (d_track_beacon)
     {
+        using namespace std;
+
         const double beacon_channel_offset = d_expected_beacon_freq - d_lnb_lo_freq - d_rf_freq;
+        clog << "Beacon tracking enabled: channel_offset = " <<
+            beacon_channel_offset << " = " << d_expected_beacon_freq << " - " <<
+            d_lnb_lo_freq << " - " << d_rf_freq << endl;
+
         beacon_channeliser->set_center_freq(beacon_channel_offset);
         const auto taps = gr::filter::firdes::complex_band_pass(
                 /*gain*/ 1.0,
                 /*sampling freq*/ d_quad_rate,
-                /*low cutoff*/ -d_quad_rate/(2.0*d_tracker_decim),
-                /*high cutoff*/ d_quad_rate/(2.0*d_tracker_decim),
-                /*transition width*/ d_beacontrack_bw);
+                /*low cutoff*/ -d_beaconfilter_bw,
+                /*high cutoff*/ d_beaconfilter_bw,
+                /*transition width*/ 1e3);
         beacon_channeliser->set_taps(taps);
 
         // costas_loop_cc doesn't support changing the loop bw, so we
@@ -1532,9 +1541,9 @@ void receiver::set_beacon_loop_bw(double loop_bw)
     d_loop_bw = loop_bw;
 }
 
-void receiver::set_beacon_tracking_bw(double bw)
+void receiver::set_beacon_filter_bw(double bw)
 {
-    d_beacontrack_bw = bw;
+    d_beaconfilter_bw = bw;
 }
 
 void receiver::apply_tracking_settings()
@@ -1551,8 +1560,9 @@ void receiver::apply_tracking_settings()
 
 float receiver::get_beacon_freq()
 {
+    using namespace std;
     if (d_track_beacon) {
-        return beacon_freq_probe->level() * -1.0 * d_quad_rate;
+        return beacon_freq_probe->level() * -1.0 * d_quad_rate/d_tracker_decim;
     }
     else {
         return 0;

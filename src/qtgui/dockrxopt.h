@@ -182,7 +182,7 @@ signals:
     void beaconTrackingChanged(bool enable);
     void expectedBeaconFreqChanged(double freq_kHz);
     void beaconTrackingLoopBWChanged(double loop_bw);
-    void beaconTrackingBWChanged(double bw_kHz);
+    void beaconFilterBWChanged(double bw_kHz);
     void applyTrackingSettingsClicked();
 
     void cwOffsetChanged(int offset);
@@ -203,9 +203,9 @@ private slots:
     void on_nb2Button_toggled(bool checked);
     void on_nbOptButton_clicked();
     void on_trackBeaconBox_stateChanged(int checkstate);
-    void on_expectedFreqBox_valueChanged(double freq);
+    void on_expectedFreqBox_valueChanged(double freq_MHz);
     void on_loopBWBox_valueChanged(double bw);
-    void on_trackingBWBox_valueChanged(double bw);
+    void on_filterBWBox_valueChanged(double bw_kHz);
     void on_applyTrackingSettingsBtn_clicked();
 
     // Signals coming from noise blanker pop-up

@@ -233,7 +233,7 @@ public:
     void        set_beacon_tracking(bool enable);
     void        set_beacon_expected_freq(double freq);
     void        set_beacon_loop_bw(double loop_bw);
-    void        set_beacon_tracking_bw(double bw);
+    void        set_beacon_filter_bw(double bw);
     void        apply_tracking_settings();
     float       get_beacon_freq();
 
@@ -259,7 +259,7 @@ private:
     double      d_lnb_lo_freq;      /*!< LNB LO offset used for expected beacon freq. */
     double      d_expected_beacon_freq; /*!< Where to search for the beacon, with LO offset */
     double      d_loop_bw;          /*!< Loop bandwidth used for the costas loop, in rad/sample */
-    double      d_beacontrack_bw;   /*!< Bandwidth for the tracking input filter */
+    double      d_beaconfilter_bw;  /*!< Bandwidth for the tracking input filter */
     unsigned int d_tracker_decim;   /*!< Decimation used for the PSK beacon tracker */
 
     std::string input_devstr;  /*!< Current input device string. */
